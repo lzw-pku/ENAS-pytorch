@@ -222,6 +222,7 @@ class Trainer(object):
 
         for self.epoch in range(self.start_epoch, self.args.max_epoch):
             # 1. Training the shared parameters omega of the child models
+            if dag is None:print('!!!!!'*100)
             self.train_shared(dag=dag)
 
             # 2. Training the controller parameters theta

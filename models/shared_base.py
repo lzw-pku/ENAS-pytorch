@@ -24,6 +24,7 @@ class SharedModel(torch.nn.Module):
 
 class LinearLowRank(nn.Module):
     def __init__(self, row, col, bias=True):
+        torch.nn.Module.__init__(self)
         rank = min(row, col)
         self.U = nn.Linear(row, row, bias=bias)
         self.sigma = nn.Parameter(torch.Tensor(rank))
@@ -52,4 +53,7 @@ class LinearLowRank(nn.Module):
         return torch.sum(torch.abs(self.sigma))
 
     def orth(self):
-        return (self.U.transpose(1, 0).mm(self.U) - torch.eye(self.U.size(0)).cuda()).norm(2)
+        def compute(u):
+            return (u.transpose(1, 0).mm(u) - torch.eye(u.size(0)).cuda()).norm(2)
+        return compute(self.U.weight) + compute(self.V.weight)
+        #return (self.U.weight.transpose(1, 0).mm(self.U.weight) - torch.eye(self.U.weight.size(0)).cuda()).norm(2)
