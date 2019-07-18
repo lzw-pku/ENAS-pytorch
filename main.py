@@ -51,4 +51,5 @@ def main(args):  # pylint:disable=redefined-outer-name
 
 if __name__ == "__main__":
     args, unparsed = config.get_args()
+    torch.cuda.set_device(args.gpu_device)
     main(args)

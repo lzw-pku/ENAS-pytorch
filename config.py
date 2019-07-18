@@ -18,7 +18,7 @@ def add_argument_group(name):
 # Network
 net_arg = add_argument_group('Network')
 net_arg.add_argument('--network_type', type=str, choices=['rnn', 'cnn'], default='rnn')
-
+net_arg.add_argument('--gpu_device', type=int, default=0)
 # Controller
 net_arg.add_argument('--num_blocks', type=int, default=12)
 net_arg.add_argument('--tie_weights', type=str2bool, default=True)
