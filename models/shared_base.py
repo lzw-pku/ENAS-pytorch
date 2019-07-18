@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-
+import torch.nn as nn
 
 def size(p):
     return np.prod(p.size())
@@ -21,3 +21,9 @@ class SharedModel(torch.nn.Module):
 
     def reset_parameters(self):
         raise NotImplementedError()
+
+class LinerLowRank(nn.Module):
+    def __init__(self):
+        pass
+    def forward(self):
+        pass

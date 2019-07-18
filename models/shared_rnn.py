@@ -168,13 +168,12 @@ class RNN(models.shared_base.SharedModel):
 
         for idx in range(args.num_blocks):
             for jdx in range(idx + 1, args.num_blocks):
-                self.w_h[idx][jdx] = nn.Linear(args.shared_hid,
-                                               args.shared_hid,
-                                               bias=False)
-                self.w_c[idx][jdx] = nn.Linear(args.shared_hid,
-                                               args.shared_hid,
-                                               bias=False)
-
+                if args.low_rank:
+                    self.w_h[idx][jdx] = LinearLowRank(args.shared_hid, args.shared_hid, bias= False)
+                    self.w_c[idx][jdx] = LinearLowRank(args.shared_hid, args.shared_hid, bias= False)
+                else:
+                    self.w_h[idx][jdx] = nn.Linear(args.shared_hid, args.shared_hid, bias=False)
+                    self.w_c[idx][jdx] = nn.Linear(args.shared_hid, args.shared_hid, bias=False)
         self._w_h = nn.ModuleList([self.w_h[idx][jdx]
                                    for idx in self.w_h
                                    for jdx in self.w_h[idx]])
