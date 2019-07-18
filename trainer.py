@@ -55,6 +55,9 @@ def _apply_penalties(extra_out, args):
         penalty += (args.norm_stabilizer_regularization_amount *
                     (extra_out['hiddens'].norm(dim=-1) -
                      args.norm_stabilizer_fixed_point).pow(2).mean())
+    if args.low_rank:
+        penalty += (args.sparse_amount * extra_out['sparse'])
+        penalty += (args.orth_amount * extra_out['orth'])
 
     return penalty
 

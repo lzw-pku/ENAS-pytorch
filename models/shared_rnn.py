@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 import models.shared_base
 import utils
-
+from models.shared_base import LinearLowRank
 
 logger = utils.get_logger()
 
@@ -169,11 +169,19 @@ class RNN(models.shared_base.SharedModel):
         for idx in range(args.num_blocks):
             for jdx in range(idx + 1, args.num_blocks):
                 if args.low_rank:
-                    self.w_h[idx][jdx] = LinearLowRank(args.shared_hid, args.shared_hid, bias= False)
-                    self.w_c[idx][jdx] = LinearLowRank(args.shared_hid, args.shared_hid, bias= False)
+                    self.w_h[idx][jdx] = LinearLowRank(args.shared_hid,
+                                                       args.shared_hid,
+                                                       bias=False)
+                    self.w_c[idx][jdx] = LinearLowRank(args.shared_hid,
+                                                       args.shared_hid,
+                                                       bias=False)
                 else:
-                    self.w_h[idx][jdx] = nn.Linear(args.shared_hid, args.shared_hid, bias=False)
-                    self.w_c[idx][jdx] = nn.Linear(args.shared_hid, args.shared_hid, bias=False)
+                    self.w_h[idx][jdx] = nn.Linear(args.shared_hid,
+                                                   args.shared_hid,
+                                                   bias=False)
+                    self.w_c[idx][jdx] = nn.Linear(args.shared_hid,
+                                                   args.shared_hid,
+                                                   bias=False)
         self._w_h = nn.ModuleList([self.w_h[idx][jdx]
                                    for idx in self.w_h
                                    for jdx in self.w_h[idx]])
@@ -216,7 +224,6 @@ class RNN(models.shared_base.SharedModel):
         if self.args.shared_dropouti > 0:
             embed = self.lockdrop(embed,
                                   self.args.shared_dropouti if is_train else 0)
-
         # TODO(brendan): The norm of hidden states are clipped here because
         # otherwise ENAS is especially prone to exploding activations on the
         # forward pass. This could probably be fixed in a more elegant way, but
@@ -283,7 +290,34 @@ class RNN(models.shared_base.SharedModel):
         extra_out = {'dropped': dropped_output,
                      'hiddens': h1tohT,
                      'raw': raw_output}
+        if self.args.low_rank:
+            sparse_penalty, orth_penalty = self.low_rank(dag)
+            extra_out.update({'sparse': sparse_penalty, 'orth': orth_penalty})
         return decoded, hidden, extra_out
+
+    def low_rank(self, dag):
+        q = collections.deque()
+        q.append(0)
+        sparse = 0
+        orth = 0
+        while True:
+            if len(q) == 0:
+                break
+            node_id = q.popleft()
+            nodes = dag[node_id]
+
+            for next_node in nodes:
+                next_id = next_node.id
+                if next_id == self.args.num_blocks:
+                    continue
+
+                w_h = self.w_h[node_id][next_id]
+                w_c = self.w_c[node_id][next_id]
+                assert isinstance(w_h, LinearLowRank) and isinstance(w_c, LinearLowRank)
+                sparse += w_h.sparse() + w_c.sparse()
+                orth += w_h.orth() + w_c.orth()
+                q.append(next_id)
+        return sparse, orth
 
     def cell(self, x, h_prev, dag):
         """Computes a single pass through the discovered RNN cell."""

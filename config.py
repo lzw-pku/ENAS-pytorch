@@ -60,6 +60,16 @@ net_arg.add_argument('--norm_stabilizer_regularization_amount',
                      default=1.0)
 net_arg.add_argument('--norm_stabilizer_fixed_point', type=float, default=5.0)
 
+
+net_arg.add_argument('--low_rank',
+                     type=str2bool,
+                     default=True)
+net_arg.add_argument('--sparse_amount',
+                     type=float,
+                     default=1e-4)
+net_arg.add_argument('--orth_amount',
+                     type=float,
+                     default=1e-4)
 # Shared parameters for CIFAR
 net_arg.add_argument('--cnn_hid', type=int, default=64)
 
